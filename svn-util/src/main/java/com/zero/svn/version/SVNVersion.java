@@ -82,7 +82,7 @@ public class SVNVersion{
 		resVO.setInfo(new ChangeInfo());
 		// SVN，地址转换为标准地址
 		// 变化文件转换
-		List<String> changeFiles = new ArrayList<String>();
+		List<String> changeFiles = new ArrayList<>();
 		String tempFile;
 		for (String svnFileName : svnInfo.getChangeFiles()) {
 			tempFile = PathUtil.trimName(svnFileName, this.projectName);
@@ -90,7 +90,7 @@ public class SVNVersion{
 		}
 		resVO.getInfo().setChangeFiles(changeFiles);
 		// 删除文件转换
-		Set<String> delSet = new HashSet<String>();
+		Set<String> delSet = new HashSet<>();
 		for (String svnFileName : svnInfo.getDelSet()) {
 			tempFile = PathUtil.trimName(svnFileName, this.projectName);
 			delSet.add(tempFile);

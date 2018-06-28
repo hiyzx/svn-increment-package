@@ -16,7 +16,7 @@ public class ChangeInfo {
     private List<String> changeFiles;
 
     // 删除文件目录
-    private Set<String> delSet = new HashSet<String>();
+    private Set<String> delSet = new HashSet<>();
 
     public List<String> getChangeFiles() {
         return changeFiles;

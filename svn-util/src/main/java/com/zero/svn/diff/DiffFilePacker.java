@@ -129,7 +129,7 @@ public class DiffFilePacker {
     private List<File> findChangeFile(File targetDir, List<String> fileNameList) throws Exception {
         String basePath = targetDir.getAbsolutePath();
         File dir;
-        List<File> exeChangeFileList = new ArrayList<File>();
+        List<File> exeChangeFileList = new ArrayList<>();
         boolean find = false;
         for (String fileName : fileNameList) {
             find = false;
