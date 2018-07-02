@@ -1,5 +1,7 @@
 package com.zero.svn.domain;
 
+import lombok.Data;
+
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -10,6 +12,7 @@ import java.util.Set;
  * @author liubq
  * @since 2018年4月13日
  */
+@Data
 public class ChangeInfo {
 
     // 变化文件列表
@@ -17,21 +20,4 @@ public class ChangeInfo {
 
     // 删除文件目录
     private Set<String> delSet = new HashSet<String>();
-
-    public List<String> getChangeFiles() {
-        return changeFiles;
-    }
-
-    public void setChangeFiles(List<String> changeFiles) {
-        this.changeFiles = changeFiles;
-    }
-
-    public Set<String> getDelSet() {
-        return delSet;
-    }
-
-    public void setDelSet(Set<String> delSet) {
-        this.delSet = delSet;
-    }
-
 }

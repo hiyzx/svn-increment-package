@@ -10,6 +10,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Scanner;
 
 /**
  * SVN方式打包 注意，必须保持本地最新代码，因为要取本地tomcat下编译好的class,js等文件，本项目不能自动编译 resource
@@ -20,7 +21,8 @@ import java.util.List;
  */
 public class PackerMain {
 
-    private static final String TARGET_PROJECT = "E:\\app\\project-name\\%s\\target\\%s";;
+    private static final String TARGET_PROJECT = "E:\\app\\project-name\\%s\\target\\%s";
+    ;
 
     private static final String SVN_URL = "http://localhost/project-name/%s";
 
@@ -33,18 +35,30 @@ public class PackerMain {
     private static List<String> libList = new ArrayList<>(20);
 
     public static void main(String[] args) throws Exception {
-        SimpleDateFormat sdf = new SimpleDateFormat("MM-dd-HH");
-        String warDir = String.format("/war包/%s-%s", "war", sdf.format(new Date()));
         Long lastVersion = 1L;
-        addNewJar(lastVersion);
+        SysLog.log("确定已经更新并打包最新项目?y:n?");
+        Scanner scan = new Scanner(System.in);
+        if ("y".equals(scan.next())) {
+            addNewJar(lastVersion);
+            packageModule(lastVersion);
+        } else {
+            throw new RuntimeException("未更新并打包最新项目");
+        }
+    }
+
+    private static void packageModule(Long lastVersion) throws Exception {
+        String warDir = String.format("/war包/%s-%s", "war", new SimpleDateFormat("MM-dd-HH").format(new Date()));
         commonPackage(warDir, "module-name-war", lastVersion);
     }
 
+    private static void addNewJar(Long lastVersion) throws Exception {
+        addNewJar("module-name-jar", lastVersion);
+        // libList.add("new.jar");
+    }
+
     /**
-     * @param moduleName
-     *            工程所用的tomcat地址（主要是为了Copy class等文件）
-     * @param firstVersion
-     *            开始增量打包版本号
+     * @param moduleName   工程所用的tomcat地址（主要是为了Copy class等文件）
+     * @param firstVersion 开始增量打包版本号
      */
     private static void commonPackage(String warDir, String moduleName, Long firstVersion) throws Exception {
         String url = String.format(SVN_URL, moduleName);
@@ -59,10 +73,6 @@ public class PackerMain {
         DiffFilePacker p = new DiffFilePacker(warDir);
         p.pack(exeHome, moduleName, list, libList);
         SysLog.log("处理完成 。。。。。。    ");
-    }
-
-    private static void addNewJar(Long lastVersion) throws Exception {
-        addNewJar("module-name-jar", lastVersion);
     }
 
     private static void addNewJar(String moduleName, Long lastVersion) throws Exception {
