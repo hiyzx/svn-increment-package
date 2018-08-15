@@ -1,1 +1,8 @@
 # Created by .ignore support plugin (hsz.mobi)
+.idea/
+record.txt
+svn-util/mvnw
+svn-util/mvnw.cmd
+svn-util/src/main/resources/
+svn-util/svn-util.iml
+svn-util/target/

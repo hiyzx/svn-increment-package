@@ -1,17 +1,14 @@
 package com.zero.svn.diff;
 
+import com.zero.svn.domain.ChangeVO;
 import com.zero.svn.util.FileCopy;
 import com.zero.svn.util.PathUtil;
 import com.zero.svn.util.SysLog;
-import com.zero.svn.domain.ChangeVO;
 
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * 变更文件打包工具
@@ -29,8 +26,8 @@ public class DiffFilePacker {
     /**
      * 变更文件打包工具
      */
-    public DiffFilePacker(String warDir) {
-        this.exportSavePath = PathUtil.SAVE_PATH + warDir;
+    public DiffFilePacker(String exportSavePath) {
+        this.exportSavePath = exportSavePath;
         File file = new File(exportSavePath);
         file.mkdirs();
 
@@ -44,8 +41,8 @@ public class DiffFilePacker {
      * @param cList
      *            被打包的文件列表
      */
-    public List<String> pack(String exeHome, String moduleName, List<ChangeVO> cList, List<String> libList)
-            throws Exception {
+    public List<String> pack(String exeHome, String moduleName, List<ChangeVO> cList, List<String> libList,
+            Map<String, Map<String, Integer>> fileCountMap) throws Exception {
         // 实际打包的文件
         List<String> actFileList = new ArrayList<>();
         if (cList == null || cList.size() == 0) {
@@ -60,6 +57,8 @@ public class DiffFilePacker {
             }
             // 查询变化文件
             List<File> exeChangeFileList = findChangeFile(targetFile, entry.getInfo().getChangeFiles());
+            // 统计变化文件数量
+            countChange(exeChangeFileList, fileCountMap, moduleName);
             // 排序
             exeChangeFileList.sort(Comparator.comparing(File::getAbsolutePath));
             // 拷贝文件
@@ -199,7 +198,7 @@ public class DiffFilePacker {
 
     /**
      * 移动jar包
-     * 
+     *
      * @param exeHome
      *            项目地址
      * @param targetLibDir
@@ -224,6 +223,22 @@ public class DiffFilePacker {
                 }
             }
         }
+    }
+
+    private void countChange(List<File> exeChangeFileList, Map<String, Map<String, Integer>> fileCountMap,
+            String moduleName) {
+        Map<String, Integer> moduleMap = fileCountMap.get(moduleName);
+        Map<String, Integer> projectMap = fileCountMap.get("project");
+        exeChangeFileList.forEach(exeChangeFile -> {
+            String fileName = exeChangeFile.getName();
+            String suffix = fileName.substring(fileName.lastIndexOf(".") + 1);
+            moduleMap.merge(suffix, 1, (a, b) -> a + b);
+        });
+        exeChangeFileList.forEach(exeChangeFile -> {
+            String fileName = exeChangeFile.getName();
+            String suffix = fileName.substring(fileName.lastIndexOf(".") + 1);
+            projectMap.merge(suffix, 1, (a, b) -> a + b);
+        });
     }
 
 }

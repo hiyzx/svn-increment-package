@@ -1,8 +1,8 @@
 package com.zero.svn.handle;
 
+import com.zero.svn.domain.ChangeInfo;
 import com.zero.svn.util.PathUtil;
 import com.zero.svn.util.SysLog;
-import com.zero.svn.domain.ChangeInfo;
 import com.zero.svn.version.SVNVersion;
 import org.tmatesoft.svn.core.SVNLogEntry;
 import org.tmatesoft.svn.core.SVNLogEntryPath;
@@ -112,14 +112,12 @@ public class SVNWorker {
     /**
      * 判断从lastVersion是否有文件修改
      */
-    public boolean judgeVersion(Long lastVersion) throws Exception {
-        // 定义svn版本库的URL。
-        SVNURL repositoryURL = null;
+    public boolean judgeVersion() throws Exception {
         // 定义版本库。
         SVNRepository repository = null;
         try {
             // 获取SVN的URL。
-            repositoryURL = SVNURL.parseURIEncoded(version.getSvnUrl());
+            SVNURL repositoryURL = SVNURL.parseURIEncoded(version.getSvnUrl());
             // 根据URL实例化SVN版本库。
             repository = SVNRepositoryFactory.create(repositoryURL);
         } catch (Exception e) {
@@ -132,10 +130,10 @@ public class SVNWorker {
         ISVNAuthenticationManager authManager = SVNWCUtil.createDefaultAuthenticationManager(user, pwd.toCharArray());
         repository.setAuthenticationManager(authManager);
         List<SVNLogEntry> entries = new ArrayList<>(100);
-        long latestRevision = repository.getLatestRevision();
-        while (entries.isEmpty() && lastVersion <= latestRevision) {
-            repository.log(new String[] { "" }, entries, latestRevision, latestRevision, true, true);
-            latestRevision--;
+        Long lastVersion = version.getEndVersion();
+        while (entries.isEmpty() && version.getStartVersion() <= lastVersion) {
+            repository.log(new String[] { "" }, entries, lastVersion, lastVersion, true, true);
+            lastVersion--;
         }
         return !entries.isEmpty();
     }
