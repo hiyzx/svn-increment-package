@@ -118,7 +118,9 @@ public class DiffFilePacker {
         }
         SysLog.log("\r\n打包完成 共打包" + actFileList.size() + "个文件");
         SysLog.log("************************************************************");
-        moveList(exeHome, String.format("%s/%s/WEB-INF/lib", exportSavePath, moduleName), libList);
+        Integer libSize = moveList(exeHome, String.format("%s/%s/WEB-INF/lib", exportSavePath, moduleName), libList);
+        // 统计lib数量
+        countLib(libSize, fileCountMap, moduleName);
         return actFileList;
     }
 
@@ -204,7 +206,8 @@ public class DiffFilePacker {
      * @param targetLibDir
      *            移动指定目录
      */
-    private void moveList(String exeHome, String targetLibDir, List<String> libList) throws Exception {
+    private Integer moveList(String exeHome, String targetLibDir, List<String> libList) throws Exception {
+        int libSize = 0;
         String libDir = String.format("%s%s", exeHome, "/WEB-INF/lib");
         File libFile = new File(libDir);
         if (libFile.isDirectory()) {
@@ -219,10 +222,12 @@ public class DiffFilePacker {
                             parent.mkdirs();
                         }
                         FileCopy.copyFile(lib, newFile);
+                        libSize++;
                     }
                 }
             }
         }
+        return libSize;
     }
 
     private void countChange(List<File> exeChangeFileList, Map<String, Map<String, Integer>> fileCountMap,
@@ -239,6 +244,11 @@ public class DiffFilePacker {
             String suffix = fileName.substring(fileName.lastIndexOf(".") + 1);
             projectMap.merge(suffix, 1, (a, b) -> a + b);
         });
+    }
+
+    private void countLib(Integer libSize, Map<String, Map<String, Integer>> fileCountMap, String moduleName) {
+        Map<String, Integer> moduleMap = fileCountMap.get(moduleName);
+        moduleMap.put("jar", libSize);
     }
 
 }
