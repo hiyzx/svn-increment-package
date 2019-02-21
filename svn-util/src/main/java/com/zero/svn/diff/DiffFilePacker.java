@@ -247,8 +247,10 @@ public class DiffFilePacker {
     }
 
     private void countLib(Integer libSize, Map<String, Map<String, Integer>> fileCountMap, String moduleName) {
-        Map<String, Integer> moduleMap = fileCountMap.get(moduleName);
-        moduleMap.put("jar", libSize);
+        if(libSize != 0){
+            Map<String, Integer> moduleMap = fileCountMap.get(moduleName);
+            moduleMap.put("jar", libSize);
+        }
     }
 
 }

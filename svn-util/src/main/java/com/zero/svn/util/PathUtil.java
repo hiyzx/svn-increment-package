@@ -13,8 +13,6 @@ import java.util.List;
  * @since 2017年12月20日
  */
 public class PathUtil {
-    // 文件保存
-    public static final String SAVE_PATH = "C:/Users/Administrator/Desktop";
     // 排除的文件目录
     private static List<String> exclusiveList = new ArrayList<>();
     // 初始化排除文件列表
