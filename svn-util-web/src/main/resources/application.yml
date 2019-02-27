@@ -17,3 +17,8 @@ spring:
     show-sql: true
     hibernate:
       ddl-auto: none
+logging:
+  level:
+    com.zero: debug
+    org.springframework.web: info
+    springframework.transaction: info

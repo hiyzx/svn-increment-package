@@ -18,15 +18,19 @@ public class ConfigService {
     @Resource
     private ConfigRepository configRepository;
 
-    public void saveOrUpdate(ConfigDto configDto) {
+    public Boolean saveOrUpdate(ConfigDto configDto) {
         Config configDb = configRepository.findByProjectName(configDto.getProjectName());
+        Boolean isFirst;
         if (configDb == null) {
             configDb = new Config();
             BeanUtils.copyProperties(configDto, configDb);
             configRepository.save(configDb);
+            isFirst = true;
         } else {
             BeanUtils.copyProperties(configDto, configDb);
             configRepository.save(configDb);
+            isFirst = false;
         }
+        return isFirst;
     }
 }

@@ -4,6 +4,7 @@ import com.zero.svn.util.web.dto.ConfigDto;
 import com.zero.svn.util.web.dto.RecordDto;
 import com.zero.svn.util.web.service.ConfigService;
 import com.zero.svn.util.web.service.PackRecordService;
+import com.zero.svn.util.web.util.CmdUtil;
 import com.zero.svn.util.web.util.PackUtil;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,7 +30,9 @@ public class PackController {
 
     @PostMapping("/pack")
     public RecordDto pack(@RequestBody ConfigDto config) throws Exception {
-        configService.saveOrUpdate(config);
+        Boolean isFirst = configService.saveOrUpdate(config);
+        install(isFirst, config);
+        config.setTargetPath(config.getTargetPath()+ "/%s/target/%s");
         RecordDto recordDto = PackUtil.of(config).packer();
         packRecordService.save(recordDto);
         return recordDto;
@@ -50,6 +53,22 @@ public class PackController {
             os.flush();
         } catch (Exception ex) {
             ex.printStackTrace();
+        }
+    }
+
+    private void install(boolean isFirst, ConfigDto config) {
+        if (isFirst) {
+            File targetPath = new File(config.getTargetPath());
+            if (!targetPath.exists()) {
+                targetPath.mkdirs();
+            }
+            CmdUtil.callCMD(String.format("cd %s", config.getTargetPath()));
+            CmdUtil.callCMD(String.format("svn checkout %s", config.getSvnUrl()));
+            CmdUtil.callCMD("mvn clean install -Dmaven.test.skip=true");
+        } else {
+            CmdUtil.callCMD(String.format("cd %s", config.getTargetPath()));
+            CmdUtil.callCMD("svn update");
+            CmdUtil.callCMD("mvn clean install -Dmaven.test.skip=true");
         }
     }
 }
