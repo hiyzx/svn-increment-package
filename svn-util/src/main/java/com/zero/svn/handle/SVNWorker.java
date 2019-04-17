@@ -4,21 +4,23 @@ import com.zero.svn.domain.ChangeInfo;
 import com.zero.svn.util.PathUtil;
 import com.zero.svn.util.SysLog;
 import com.zero.svn.version.SVNVersion;
-import org.tmatesoft.svn.core.SVNLogEntry;
-import org.tmatesoft.svn.core.SVNLogEntryPath;
-import org.tmatesoft.svn.core.SVNNodeKind;
-import org.tmatesoft.svn.core.SVNURL;
+import org.tmatesoft.svn.core.*;
 import org.tmatesoft.svn.core.auth.ISVNAuthenticationManager;
 import org.tmatesoft.svn.core.internal.io.dav.DAVRepositoryFactory;
+import org.tmatesoft.svn.core.internal.wc.DefaultSVNOptions;
 import org.tmatesoft.svn.core.io.SVNRepository;
 import org.tmatesoft.svn.core.io.SVNRepositoryFactory;
+import org.tmatesoft.svn.core.wc.SVNClientManager;
+import org.tmatesoft.svn.core.wc.SVNRevision;
+import org.tmatesoft.svn.core.wc.SVNUpdateClient;
 import org.tmatesoft.svn.core.wc.SVNWCUtil;
 
+import java.io.File;
 import java.util.*;
 
 /**
  * SVN工具类
- * 
+ *
  * @author liubq
  * @since 2017年12月20日
  */
@@ -33,6 +35,61 @@ public class SVNWorker {
     public SVNWorker(SVNVersion version) {
         this.version = version;
         DAVRepositoryFactory.setup();
+    }
+
+    public void checkout() throws SVNException {
+        // 定义svn版本库的URL。
+        SVNURL repositoryURL = null;
+        // 定义版本库。
+        SVNRepository repository = null;
+        try {
+            // 获取SVN的URL。
+            repositoryURL = SVNURL.parseURIEncoded(version.getSvnUrl());
+            // 根据URL实例化SVN版本库。
+            repository = SVNRepositoryFactory.create(repositoryURL);
+        } catch (Exception e) {
+            SysLog.log("创建版本库实例时失败，版本库的URL是 '" + version.getSvnUrl() + "'", e);
+            return;
+        }
+        // 对版本库设置认证信息。
+        String user = version.getUsername();
+        String pwd = version.getPassword();
+        ISVNAuthenticationManager authManager = SVNWCUtil.createDefaultAuthenticationManager(user, pwd.toCharArray());
+        repository.setAuthenticationManager(authManager);
+
+        DefaultSVNOptions options = SVNWCUtil.createDefaultOptions(true);
+        SVNClientManager clientManager = SVNClientManager.newInstance(options, authManager);
+        SVNUpdateClient updateClient = clientManager.getUpdateClient();
+        updateClient.doCheckout(SVNURL.parseURIEncoded(version.getSvnUrl()), new File(version.getTargetPath()),
+                SVNRevision.HEAD, SVNRevision.HEAD, SVNDepth.INFINITY, false);
+    }
+
+    public void update() throws SVNException {
+        // 定义svn版本库的URL。
+        SVNURL repositoryURL = null;
+        // 定义版本库。
+        SVNRepository repository = null;
+        try {
+            // 获取SVN的URL。
+            repositoryURL = SVNURL.parseURIEncoded(version.getSvnUrl());
+            // 根据URL实例化SVN版本库。
+            repository = SVNRepositoryFactory.create(repositoryURL);
+        } catch (Exception e) {
+            SysLog.log("创建版本库实例时失败，版本库的URL是 '" + version.getSvnUrl() + "'", e);
+            return;
+        }
+        // 对版本库设置认证信息。
+        String user = version.getUsername();
+        String pwd = version.getPassword();
+        ISVNAuthenticationManager authManager = SVNWCUtil.createDefaultAuthenticationManager(user, pwd.toCharArray());
+        repository.setAuthenticationManager(authManager);
+
+        DefaultSVNOptions options = SVNWCUtil.createDefaultOptions(true);
+        SVNClientManager clientManager = SVNClientManager.newInstance(options, authManager);
+        SVNUpdateClient updateClient = clientManager.getUpdateClient();
+        updateClient.setIgnoreExternals(false);
+        updateClient.doUpdate(new File(version.getTargetPath()), SVNRevision.HEAD, SVNDepth.INFINITY, false, false);
+
     }
 
     /**
@@ -67,8 +124,8 @@ public class SVNWorker {
             if (endRevision < 0) {
                 endRevision = repository.getLatestRevision();
             }
-            Collection<SVNLogEntry> logEntries = repository.log(new String[] { "" }, null, startRevision, endRevision,
-                    true, true);
+            Collection<SVNLogEntry> logEntries = repository
+                    .log(new String[]{""}, null, startRevision, endRevision, true, true);
             List<String> fileList = new ArrayList<>();
             Set<String> delSet = new HashSet<>();
             // 我测试这个是有顺序
@@ -95,6 +152,12 @@ public class SVNWorker {
                                 SysLog.log(key + "删除后又回复了这个文件，请判断是否合理 ");
                                 delSet.remove(key);
                             }
+                        }
+                    } else { // 操作的是整个文件夹
+                        if ("D".equalsIgnoreCase(String.valueOf(entry.getValue().getType()))) {
+                            fileList.remove(key);
+                            // 删除了
+                            delSet.add(key);
                         }
                     }
                 }
@@ -132,7 +195,7 @@ public class SVNWorker {
         List<SVNLogEntry> entries = new ArrayList<>(100);
         Long lastVersion = version.getEndVersion();
         while (entries.isEmpty() && version.getStartVersion() <= lastVersion) {
-            repository.log(new String[] { "" }, entries, lastVersion, lastVersion, true, true);
+            repository.log(new String[]{""}, entries, lastVersion, lastVersion, true, true);
             lastVersion--;
         }
         return !entries.isEmpty();
@@ -140,7 +203,7 @@ public class SVNWorker {
 
     /**
      * 是否需要排除
-     * 
+     *
      * 这样仍然排除不了所有目录 例如：abc/ddd/asd.d这个类型目录
      */
     private boolean isExclusive(String file) {
