@@ -4,8 +4,11 @@ import com.zero.svn.domain.ChangeInfo;
 import com.zero.svn.domain.ChangeVO;
 import com.zero.svn.handle.SVNWorker;
 import com.zero.svn.util.PathUtil;
+import com.zero.svn.util.SysLog;
 import lombok.Data;
+import org.tmatesoft.svn.core.SVNException;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -13,7 +16,7 @@ import java.util.Set;
 
 /**
  * SVN变化版本
- * 
+ *
  * @author liubq
  * @since 2018年1月16日
  */
@@ -40,7 +43,7 @@ public class SVNVersion {
 
     /**
      * SVN变化版本
-     * 
+     *
      * @param target
      *            可运行程序（编译后程序）保存地址
      * @param inSvnUrl
@@ -52,8 +55,7 @@ public class SVNVersion {
      * @param startVersion
      *            开始版本号
      */
-    public SVNVersion(String target, String inSvnUrl, String name, String pwd, Long startVersion, Long lastVersion)
-            throws Exception {
+    public SVNVersion(String target, String inSvnUrl, String name, String pwd, Long startVersion, Long lastVersion) {
         this(target, inSvnUrl, name, pwd, startVersion, lastVersion, null);
     }
 
@@ -73,6 +75,19 @@ public class SVNVersion {
         this.startVersion = startVersion;
         this.endVersion = lastVersion;
         worker = new SVNWorker(this);
+    }
+
+    public void update() throws SVNException {
+        File targetPathFile = new File(targetPath);
+        if (targetPathFile.exists()) {
+            SysLog.log("开始更新");
+            worker.update();// 更新
+            SysLog.log("更新完成");
+        } else {
+            SysLog.log("开始下载");
+            worker.checkout();// 下载
+            SysLog.log("下载完成");
+        }
     }
 
     /**
