@@ -1,17 +1,12 @@
 # svn-increment-package
-
-该项目是基于liubq100000的https://github.com/liubq100000/BHChangePacker 进行修改,感谢.
-
+### 背景
+前公司每次更新项目只能使用增量包的形式,增量包需要注意文件层级结构以及有改动的文件,比较麻烦,所以有了该项目.  
+### 感谢
+该项目是基于@liubq100000的https://github.com/liubq100000/BHChangePacker 进行修改,感谢.
+### 说明
+将最新的代码编译,然后根据svn版本号,获取期间变动的文件名称,到target下获取对应的class文件.
 ## 如何使用
-1. 下载全新的svn项目,并进行clean和install
-2. 修改PackerMain下的参数
-    1. TARGET_PROJECT修改为打包项目的target目录
-    2. SVN_URL修改为顶级pom对应的url
-    3. USERNAME,PASSWORD,PROJECT_VERSION
-    4. lastVersion修改开始打包的version
-3. PackerMain的方法addNewJar()
-    1. 第一次需将聚合模块依赖的jar包全部添加进来
-    2. 每次打包都将新增的普通jar包添加进来
-4. PackerMain的方法commonPackage()
-    1. 将需要打包的war包添加进来
-5. 运行main方法(需安装lombok),生成内容在C:\Users\Administrator\Desktop\war包\war-MM-dd-HH
+1. 如果是首次打包发布的话,直接发全量包
+2. 该项目针对增量包
+    1. 修改PackerMain中ConfigDto的参数,并执行main方法(需安装lombok)
+    2. 到savePath路径下找到对应文件(注意配置文件的修改,及删除文件的说明)
